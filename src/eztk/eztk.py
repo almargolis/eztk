@@ -1,17 +1,16 @@
-import cv2
-from PIL import ImageTk, Image
-import os
-import sys
-
 import tkinter
 import tkinter.ttk
 import tkinter.scrolledtext as ScrolledText
 import tkinter.filedialog as tkFileDialog
 
 try:
-    import OpticChiasm
-except:
-    OpticChiasm = None
+    import cv2
+    import numpy as np
+    from PIL import ImageTk, Image
+
+    _HAS_IMAGE_LIBS = True
+except ImportError:
+    _HAS_IMAGE_LIBS = False
 
 FIRST_ROW = 0
 SAME_ROW = -1
@@ -26,6 +25,14 @@ LEFT_COL = -1
 EXTEND_COL = -4
 OVERLAY_COL = -5
 COL_SPAN_ALL = -1
+
+
+def _require_image_libs(method_name):
+    if not _HAS_IMAGE_LIBS:
+        raise ImportError(
+            "eztk.{}() requires opencv-python, numpy, and Pillow. "
+            "Install with: pip install opencv-python numpy Pillow".format(method_name)
+        )
 
 
 #
@@ -597,7 +604,7 @@ class TkWidgetDef:
         if self.tkw_label is not None:
             self.tkw_label.destroy()
         if self.tkd is not None:
-            if isinstance(self.tkd, ImageTk.PhotoImage):
+            if _HAS_IMAGE_LIBS and isinstance(self.tkd, ImageTk.PhotoImage):
                 self.tkd = None
             else:
                 self.tkd.destroy()
@@ -723,32 +730,6 @@ class TkWidgetDef:
         self.append_child(frame)
         return frame
 
-    def x_make_popup_window(self, title):
-        popup = tkinter.Toplevel()
-        popup.title(title)
-
-        ksbar = tkinter.Scrollbar(popup, orient=tkinter.VERTICAL)
-        ksbar.grid(row=0, column=1, sticky="ns")
-
-        popCanv = tkinter.Canvas(
-            popup, width=300, height=300, scrollregion=(0, 0, 500, 800)
-        )  # width=1256, height = 1674)
-        popCanv.grid(row=0, column=0, sticky=tkinter.W)  # added sticky
-
-        ksbar.config(command=popCanv.yview)
-        popCanv.config(yscrollcommand=ksbar.set)
-
-        self.xxopencv_im = cv2.imread("zoom.jpeg")
-        self.xximg_pil = Image.fromarray(self.xxopencv_im)
-        self.xximg = ImageTk.PhotoImage(self.xximg_pil)  # amended
-        image = popCanv.create_image(
-            300, 400, image=self.xximg
-        )  # correct way of adding an image to canvas
-        # popCanv.create_text(420,790,text=source)
-
-        popup.rowconfigure(0, weight=1)  # added (answer to your question)
-        popup.columnconfigure(0, weight=1)  # added (answer to your question)
-
     def make_popup_window(self, title):
         refname = title
         top = tkinter.Toplevel()
@@ -859,6 +840,7 @@ class TkWidgetDef:
         textcolor=(255, 255, 255),
         text_start_xy=(10, 10),
     ):
+        _require_image_libs("create_substitute_image")
         blank_image = np.zeros((height, width, 3), np.uint8)
         if caption is not None:
             font = cv2.FONT_HERSHEY_SIMPLEX
@@ -880,6 +862,7 @@ class TkWidgetDef:
         self.tkw.focus()
 
     def make_thumbnail(self, im, width):
+        _require_image_libs("make_thumbnail")
         # im is an OpenCv / numpy buffer. It can be either RGB or BGR. The color format is not changed.
         if im is None:
             return None
@@ -952,13 +935,14 @@ class TkWidgetDef:
         self.tkw.update()
 
     def update_image(self, pil_fn=None, source_im=None, opencv_fn=None, rgb_im=None):
+        _require_image_libs("update_image")
         # Replaces image in Canvas and Label widgets
         # We can have up to 3 stages of image buffers. We keep references to all
         # for debugging and becaues of some strange garbage collection issues with
         # TK images.
         # self.tkd is ImageTk.PhotoImage() which actually gets placed on widget
         # self.pil_im is a Pillow Image() which TK directly uses
-        # self.source_im is either an OpenCV buffer or an OpticChiasm.Image for JPEG (or other) files
+        # self.source_im is either an OpenCV buffer for JPEG (or other) files
         #
         self.pil_im = None
         self.rgb_im = None
@@ -978,17 +962,13 @@ class TkWidgetDef:
                     source_im.__class__.__name__,
                     source_im.shape,
                 )
-            if (OpticChiasm is None) or (not isinstance(source_im, OpticChiasm.Image)):
-                # this is an OpenCv image
-                if len(source_im.shape) > 2:
-                    self.rgb_im = cv2.cvtColor(source_im, cv2.COLOR_BGR2RGB)
-                else:
-                    self.rgb_im = cv2.cvtColor(source_im, cv2.COLOR_GRAY2RGB)
+            # this is an OpenCv image
+            if len(source_im.shape) > 2:
+                self.rgb_im = cv2.cvtColor(source_im, cv2.COLOR_BGR2RGB)
             else:
-                self.rgb_im = source_im.ImAsRGB()
+                self.rgb_im = cv2.cvtColor(source_im, cv2.COLOR_GRAY2RGB)
             self.pil_im = Image.fromarray(self.rgb_im)
         elif opencv_fn is not None:
-            print("***", os.getcwd(), opencv_fn)
             opencv_im = cv2.imread(opencv_fn)
             self.rgb_im = cv2.cvtColor(opencv_im, cv2.COLOR_BGR2RGB)
             self.pil_im = Image.fromarray(self.rgb_im)
@@ -1243,48 +1223,3 @@ class EasyTk(TkWidgetDef):
 
     def __init__(self, debug=False):
         super().__init__("root", tkinter.Tk(), is_container=True, debug=debug)
-
-
-def simple_test():
-    t = EasyTk()
-    t.add_button("This", None)
-    t.tkw.mainloop()
-
-
-class RawTestObject:
-    def __init__(self):
-        self.root = tkinter.Tk()
-        self.root.title("Entry Sheet")
-        self.root.font = ("Helvetica", "13")
-        self.root.header_font = ("Helvetica", "18")
-        self.root.exercise_font = ("Helvetica", "13", "bold")
-        self.root.delete = "a"
-        # self.root.new_user()
-
-        self.frame = tkinter.Frame(self.root)
-        self.frame.pack()
-
-        self.button = tkinter.Button(
-            self.frame, text="QUIT", fg="red", bg="blue", command=quit
-        )
-        self.button.pack(side=tkinter.LEFT)
-        self.slogan = tkinter.Button(
-            self.frame, text="Hello", command=self.write_slogan
-        )
-        self.slogan.pack(side=tkinter.LEFT),
-
-    def write_slogan(self):
-        print("tkinter is easy to use!")
-
-    def loop(self):
-        self.root.mainloop()
-
-
-def raw_test():
-    t = RawTestObject()
-    t.loop()
-
-
-if __name__ == "__main__":
-    # simple_test()
-    raw_test()

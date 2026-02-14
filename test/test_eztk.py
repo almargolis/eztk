@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from vnavslib import easytk
+from eztk import eztk
 
 
 # ---------------------------------------------------------------------------
@@ -11,7 +11,7 @@ from vnavslib import easytk
 
 def make_container(**overrides):
     """Create a TkWidgetDef with container defaults, bypassing __init__."""
-    c = object.__new__(easytk.TkWidgetDef)
+    c = object.__new__(eztk.TkWidgetDef)
     c.is_container = True
     c.right_col = 0
     c.bottom_row = 0
@@ -27,7 +27,7 @@ def make_container(**overrides):
 
 def make_widget():
     """Create a bare TkWidgetDef to use as a placed child widget."""
-    w = object.__new__(easytk.TkWidgetDef)
+    w = object.__new__(eztk.TkWidgetDef)
     w.row = None
     w.col = None
     w.row_span = 0
@@ -44,60 +44,60 @@ def make_widget():
 class TestPositionRowConstants:
     def test_first_row(self):
         c = make_container()
-        row, col = c._position(row=easytk.FIRST_ROW, col=easytk.SAME_COL)
+        row, col = c._position(row=eztk.FIRST_ROW, col=eztk.SAME_COL)
         assert row == 0
 
     def test_same_row_initial_becomes_zero(self):
         c = make_container()
-        row, _ = c._position(row=easytk.SAME_ROW, col=easytk.SAME_COL)
+        row, _ = c._position(row=eztk.SAME_ROW, col=eztk.SAME_COL)
         assert row == 0
         assert c.last_used_row == 0
 
     def test_same_row_subsequent_stays_current(self):
         c = make_container(last_used_row=3)
-        row, _ = c._position(row=easytk.SAME_ROW, col=easytk.SAME_COL)
+        row, _ = c._position(row=eztk.SAME_ROW, col=eztk.SAME_COL)
         assert row == 3
 
     def test_next_row_from_initial(self):
         c = make_container()
-        row, _ = c._position(row=easytk.NEXT_ROW, col=easytk.SAME_COL)
-        # last_used_row=-1, last_used_rowspan=1 → row = -1 + 1 = 0
+        row, _ = c._position(row=eztk.NEXT_ROW, col=eztk.SAME_COL)
+        # last_used_row=-1, last_used_rowspan=1 -> row = -1 + 1 = 0
         assert row == 0
 
     def test_next_row_advances(self):
         c = make_container(last_used_row=2, last_used_rowspan=1)
-        row, _ = c._position(row=easytk.NEXT_ROW, col=easytk.SAME_COL)
+        row, _ = c._position(row=eztk.NEXT_ROW, col=eztk.SAME_COL)
         assert row == 3
 
     def test_next_row_accounts_for_rowspan(self):
         c = make_container(last_used_row=1, last_used_rowspan=3)
-        row, _ = c._position(row=easytk.NEXT_ROW, col=easytk.SAME_COL)
+        row, _ = c._position(row=eztk.NEXT_ROW, col=eztk.SAME_COL)
         assert row == 4
 
     def test_next_row_resets_rowspan(self):
         c = make_container(last_used_row=0, last_used_rowspan=5)
-        c._position(row=easytk.NEXT_ROW, col=easytk.SAME_COL)
+        c._position(row=eztk.NEXT_ROW, col=eztk.SAME_COL)
         assert c.last_used_rowspan == 1
 
     def test_next_row_resets_col_state(self):
         c = make_container(last_used_row=0, last_used_col=3, last_used_colspan=2)
-        c._position(row=easytk.NEXT_ROW, col=easytk.SAME_COL)
+        c._position(row=eztk.NEXT_ROW, col=eztk.SAME_COL)
         assert c.last_used_col == 0  # SAME_COL fixup after reset to -1
         assert c.last_used_colspan == 1
 
     def test_bottom_row(self):
         c = make_container(bottom_row=7)
-        row, _ = c._position(row=easytk.BOTTOM_ROW, col=easytk.SAME_COL)
+        row, _ = c._position(row=eztk.BOTTOM_ROW, col=eztk.SAME_COL)
         assert row == 7
 
     def test_extend_row(self):
         c = make_container(bottom_row=4)
-        row, _ = c._position(row=easytk.EXTEND_ROW, col=easytk.SAME_COL)
+        row, _ = c._position(row=eztk.EXTEND_ROW, col=eztk.SAME_COL)
         assert row == 5
 
     def test_overlay_row(self):
         c = make_container(last_used_row=2, last_used_col=3)
-        row, col = c._position(row=easytk.OVERLAY_ROW, col=easytk.SAME_COL)
+        row, col = c._position(row=eztk.OVERLAY_ROW, col=eztk.SAME_COL)
         assert row == 2
         assert col == 3  # OVERLAY forces col to OVERLAY_COL too
 
@@ -105,40 +105,40 @@ class TestPositionRowConstants:
 class TestPositionColConstants:
     def test_same_col_initial_becomes_zero(self):
         c = make_container()
-        _, col = c._position(row=easytk.FIRST_ROW, col=easytk.SAME_COL)
+        _, col = c._position(row=eztk.FIRST_ROW, col=eztk.SAME_COL)
         assert col == 0
         assert c.last_used_col == 0
 
     def test_same_col_subsequent_stays_current(self):
         c = make_container(last_used_col=5)
-        _, col = c._position(row=easytk.FIRST_ROW, col=easytk.SAME_COL)
+        _, col = c._position(row=eztk.FIRST_ROW, col=eztk.SAME_COL)
         assert col == 5
 
     def test_next_col(self):
         c = make_container(last_used_col=1, last_used_colspan=2)
-        _, col = c._position(row=easytk.FIRST_ROW, col=easytk.NEXT_COL)
+        _, col = c._position(row=eztk.FIRST_ROW, col=eztk.NEXT_COL)
         assert col == 3
 
     def test_right_col(self):
         c = make_container(right_col=6)
-        _, col = c._position(row=easytk.FIRST_ROW, col=easytk.RIGHT_COL)
+        _, col = c._position(row=eztk.FIRST_ROW, col=eztk.RIGHT_COL)
         assert col == 6
 
     def test_left_col_same_as_same_col(self):
         # LEFT_COL == SAME_COL == -1, so LEFT_COL hits the SAME_COL branch
-        assert easytk.LEFT_COL == easytk.SAME_COL
+        assert eztk.LEFT_COL == eztk.SAME_COL
         c = make_container(last_used_col=4)
-        _, col = c._position(row=easytk.FIRST_ROW, col=easytk.LEFT_COL)
+        _, col = c._position(row=eztk.FIRST_ROW, col=eztk.LEFT_COL)
         assert col == 4  # behaves like SAME_COL
 
     def test_extend_col(self):
         c = make_container(right_col=3)
-        _, col = c._position(row=easytk.FIRST_ROW, col=easytk.EXTEND_COL)
+        _, col = c._position(row=eztk.FIRST_ROW, col=eztk.EXTEND_COL)
         assert col == 4
 
     def test_overlay_col_forces_both(self):
         c = make_container(last_used_row=5, last_used_col=2)
-        row, col = c._position(row=easytk.FIRST_ROW, col=easytk.OVERLAY_COL)
+        row, col = c._position(row=eztk.FIRST_ROW, col=eztk.OVERLAY_COL)
         # OVERLAY_COL triggers both row and col to overlay
         assert row == 5
         assert col == 2
@@ -147,12 +147,12 @@ class TestPositionColConstants:
 class TestPositionPositiveValues:
     def test_positive_row_passes_through(self):
         c = make_container()
-        row, _ = c._position(row=7, col=easytk.SAME_COL)
+        row, _ = c._position(row=7, col=eztk.SAME_COL)
         assert row == 7
 
     def test_positive_col_passes_through(self):
         c = make_container()
-        _, col = c._position(row=easytk.FIRST_ROW, col=4)
+        _, col = c._position(row=eztk.FIRST_ROW, col=4)
         assert col == 4
 
     def test_zero_row_col_pass_through(self):
@@ -165,13 +165,13 @@ class TestPositionPositiveValues:
 class TestPositionOverlayInteraction:
     def test_overlay_row_only_forces_both(self):
         c = make_container(last_used_row=3, last_used_col=2)
-        row, col = c._position(row=easytk.OVERLAY_ROW, col=easytk.NEXT_COL)
+        row, col = c._position(row=eztk.OVERLAY_ROW, col=eztk.NEXT_COL)
         assert row == 3
         assert col == 2  # col forced to OVERLAY_COL despite NEXT_COL
 
     def test_overlay_col_only_forces_both(self):
         c = make_container(last_used_row=4, last_used_col=1)
-        row, col = c._position(row=easytk.NEXT_ROW, col=easytk.OVERLAY_COL)
+        row, col = c._position(row=eztk.NEXT_ROW, col=eztk.OVERLAY_COL)
         assert row == 4
         assert col == 1  # row forced to OVERLAY_ROW despite NEXT_ROW
 
@@ -268,7 +268,7 @@ class TestSequentialLayout:
         """Simulate placing 3 widgets in a 3-row, 1-column layout."""
         c = make_container()
         for expected_row in range(3):
-            row, col = c._position(row=easytk.NEXT_ROW, col=easytk.SAME_COL)
+            row, col = c._position(row=eztk.NEXT_ROW, col=eztk.SAME_COL)
             assert row == expected_row
             assert col == 0
             w = make_widget()
@@ -279,12 +279,12 @@ class TestSequentialLayout:
         c = make_container()
         positions = []
         for r in range(2):
-            row, col = c._position(row=easytk.NEXT_ROW, col=easytk.SAME_COL)
+            row, col = c._position(row=eztk.NEXT_ROW, col=eztk.SAME_COL)
             w = make_widget()
             c._remember_position(w, row, col)
             positions.append((row, col))
 
-            row2, col2 = c._position(row=easytk.SAME_ROW, col=easytk.NEXT_COL)
+            row2, col2 = c._position(row=eztk.SAME_ROW, col=eztk.NEXT_COL)
             w2 = make_widget()
             c._remember_position(w2, row2, col2)
             positions.append((row2, col2))
@@ -294,25 +294,25 @@ class TestSequentialLayout:
     def test_multi_row_span_advances_correctly(self):
         """A widget with rowspan=3 means NEXT_ROW jumps past it."""
         c = make_container()
-        row, col = c._position(row=easytk.NEXT_ROW, col=easytk.SAME_COL)
+        row, col = c._position(row=eztk.NEXT_ROW, col=eztk.SAME_COL)
         w = make_widget()
         c._remember_position(w, row, col, rowspan=3)
         assert row == 0
 
-        row2, col2 = c._position(row=easytk.NEXT_ROW, col=easytk.SAME_COL)
+        row2, col2 = c._position(row=eztk.NEXT_ROW, col=eztk.SAME_COL)
         assert row2 == 3  # jumped past the 3-row span
 
     def test_extent_growth(self):
         """bottom_row and right_col grow as widgets are placed."""
         c = make_container()
         w1 = make_widget()
-        r, co = c._position(row=easytk.NEXT_ROW, col=easytk.SAME_COL)
+        r, co = c._position(row=eztk.NEXT_ROW, col=eztk.SAME_COL)
         c._remember_position(w1, r, co, colspan=2)
         assert c.right_col == 1
         assert c.bottom_row == 0
 
         w2 = make_widget()
-        r2, co2 = c._position(row=easytk.NEXT_ROW, col=easytk.SAME_COL)
+        r2, co2 = c._position(row=eztk.NEXT_ROW, col=eztk.SAME_COL)
         c._remember_position(w2, r2, co2, colspan=3, rowspan=2)
         assert c.right_col == 2
         assert c.bottom_row == 2
@@ -320,11 +320,11 @@ class TestSequentialLayout:
     def test_colspan_two_then_next_col(self):
         """NEXT_COL after a colspan=2 widget should skip past it."""
         c = make_container()
-        row, col = c._position(row=easytk.NEXT_ROW, col=easytk.SAME_COL)
+        row, col = c._position(row=eztk.NEXT_ROW, col=eztk.SAME_COL)
         w1 = make_widget()
         c._remember_position(w1, row, col, colspan=2)
 
-        _, col2 = c._position(row=easytk.SAME_ROW, col=easytk.NEXT_COL)
+        _, col2 = c._position(row=eztk.SAME_ROW, col=eztk.NEXT_COL)
         assert col2 == 2  # 0 + 2 = 2
 
 
@@ -335,7 +335,7 @@ class TestSequentialLayout:
 
 def make_notebook():
     """Create a Notebook instance without Tkinter, using object.__new__()."""
-    nb = object.__new__(easytk.Notebook)
+    nb = object.__new__(eztk.Notebook)
     nb.tab_frames = ["frame_a", "frame_b", "frame_c"]
     nb.tab_labels_tk = [".nb.tab0", ".nb.tab1", ".nb.tab2"]
     nb.tab_labels_widget = ["widget_a", "widget_b", "widget_c"]
@@ -397,7 +397,7 @@ class TestNotebookTabs:
 
 class TestMakeThumbnail:
     def _make_tkwd(self):
-        w = object.__new__(easytk.TkWidgetDef)
+        w = object.__new__(eztk.TkWidgetDef)
         w.debug_this = None
         return w
 
