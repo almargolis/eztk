@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eztk"
+version = "0.1.0"
+description = "A simplified Tkinter widget framework with grid layout engine"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+authors = [
+    { name = "Albert Margolis", email = "almargolis@gmail.com" },
+]
+keywords = ["tkinter", "gui", "widgets", "layout"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: User Interfaces",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/almargolis/eztk"
+"Bug Tracker" = "https://github.com/almargolis/eztk/issues"
+"Source Code" = "https://github.com/almargolis/eztk"
+
+[project.optional-dependencies]
+images = [
+    "opencv-python>=4.5.0",
+    "numpy>=1.19.0",
+    "Pillow>=8.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["eztk*"]
