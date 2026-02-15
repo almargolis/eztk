@@ -904,8 +904,13 @@ class TkWidgetDef:
         # print(debug)
 
         if isinstance(self.tkw, ScrolledText.ScrolledText):
+            was_disabled = self.tkw.cget("state") == "disabled"
+            if was_disabled:
+                self.tkw.config(state="normal")
             self.tkw.delete("1.0", tkinter.END)
             self.tkw.insert("1.0", new_value)
+            if was_disabled:
+                self.tkw.config(state="disabled")
         elif isinstance(self.tkw, tkinter.Label) and (self.tkw_label is None):
             # if self.tkw_label is not None, this is from add_label_info(): update self.tk_data
             self.tkw.config(text=new_value)
