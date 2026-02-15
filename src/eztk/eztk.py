@@ -451,7 +451,7 @@ class TkWidgetDef:
         tk_data = tkinter.StringVar()
         tk_data.set(selection)
         if command is not None:
-            tk_data.trace("w", command)
+            tk_data.trace_add("write", command)
         args = [self.tkw, tk_data] + s_items
         tk_entry = tkinter.OptionMenu(*args)
         tk_entry.grid(column=entry_col, row=row, sticky=(tkinter.W, tkinter.E))
